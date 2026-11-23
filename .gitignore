@@ -1,0 +1,19 @@
+# 第三方克隆：各自是独立 git 仓库，按 docs/ENVIRONMENT.md 重建
+dbg/WMPFDebugger/
+dbg/sheep-solver/
+
+# 大文件不进仓库（sha256 记录在 docs/ENVIRONMENT.md）
+dbg/*.tar.gz
+
+# 游戏素材（48MB，可由 tools/probe_assets.py 从 CDN 重新拉取，不入库）
+assets/
+
+# 运行产物
+out/
+mobile/shots/
+__pycache__/
+*.pyc
+node_modules/
+
+# 本地工作数据（不删，只是不入库）
+.workbuddy/
