@@ -22,6 +22,36 @@ function Warn($m) { Write-Host "[warn] $m" -ForegroundColor Yellow }
 function Hold     { try { if (-not [Console]::IsInputRedirected) { Read-Host "Press Enter to exit" | Out-Null } } catch { } }
 function Die($m)  { Write-Host "[FAIL] $m" -ForegroundColor Red; Write-Host ""; Hold; exit 1 }
 
+# Downloads die on a single network blip ("unexpected EOF or 0 bytes"),
+# which is common on long-lived connections here. Try every URL twice,
+# then move to the next mirror. Returns $true on success.
+function Get-File($Urls, $OutFile, $Label) {
+  $n = 0
+  $dir = Split-Path $OutFile -Parent
+  if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+  $prev = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    foreach ($u in $Urls) {
+      for ($i = 1; $i -le 2; $i++) {
+        $n++
+        if (Test-Path $OutFile) { Remove-Item $OutFile -Force -ErrorAction SilentlyContinue }
+        try {
+          Invoke-WebRequest -Uri $u -OutFile $OutFile -UseBasicParsing -TimeoutSec 600
+          if ((Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 1024) { return $true }
+          Warn "$Label : empty file from $u"
+        } catch {
+          $msg = "$($_.Exception.Message)".Split("`n")[0]
+          Warn "$Label : attempt $n failed - $msg"
+          Start-Sleep -Seconds 3
+        }
+      }
+      if ($n -gt 0) { Warn "$Label : switching to next source" }
+    }
+    return $false
+  } finally { $ErrorActionPreference = $prev }
+}
+
 # PS 5.1 turns stderr from native commands into terminating errors under
 # ErrorActionPreference=Stop (yarn/npm/git all print warnings there).
 # Run them with a relaxed preference and return the real exit code.
@@ -52,7 +82,12 @@ if (Test-Path $localNode) {
   Info "downloading node $NODE_VER (~30 MB)"
   New-Item -ItemType Directory -Force -Path $TMP | Out-Null
   $zip = Join-Path $TMP 'node.zip'
-  Invoke-WebRequest -Uri "https://npmmirror.com/mirrors/node/v$NODE_VER/node-v$NODE_VER-win-x64.zip" -OutFile $zip -UseBasicParsing
+  $okNode = Get-File @(
+    "https://registry.npmmirror.com/-/binary/node/v$NODE_VER/node-v$NODE_VER-win-x64.zip",
+    "https://npmmirror.com/mirrors/node/v$NODE_VER/node-v$NODE_VER-win-x64.zip",
+    "https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-win-x64.zip"
+  ) $zip 'node'
+  if (-not $okNode) { Die "node download failed after retries - check network, or install node 22 manually and re-run" }
   Expand-Archive -Path $zip -DestinationPath (Join-Path $TMP 'node') -Force
   New-Item -ItemType Directory -Force -Path (Split-Path $NODE_DIR -Parent) | Out-Null
   Move-Item (Join-Path $TMP "node\node-v$NODE_VER-win-x64") $NODE_DIR -Force
@@ -93,9 +128,24 @@ function Get-Repo($dir, $gitUrl, $zipUrl, $inner, $probe, $label) {
   New-Item -ItemType Directory -Force -Path $TMP | Out-Null
   $zip = Join-Path $TMP "$inner.zip"
   $ext = Join-Path $TMP "x-$inner"
-  Invoke-WebRequest -Uri $zipUrl -OutFile $zip -UseBasicParsing
-  if (Test-Path $ext) { Remove-Item $ext -Recurse -Force }
-  Expand-Archive -Path $zip -DestinationPath $ext -Force
+  # A truncated zip still reports success on download but blows up on extract.
+  # Treat download+extract as one unit and retry the pair.
+  $okZip = $false
+  for ($attempt = 1; $attempt -le 2 -and -not $okZip; $attempt++) {
+    if (-not (Get-File @($zipUrl, "https://gh-proxy.com/$zipUrl") $zip $label)) { break }
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Stop'
+    try {
+      if (Test-Path $ext) { Remove-Item $ext -Recurse -Force -ErrorAction SilentlyContinue }
+      Expand-Archive -Path $zip -DestinationPath $ext -Force -ErrorAction Stop
+      if (Test-Path (Join-Path $ext $inner)) { $okZip = $true }
+      else { Warn "$label : archive layout unexpected, retrying" }
+    } catch {
+      Warn "$label : archive damaged - $("$($_.Exception.Message)".Split("`n")[0])"
+      Start-Sleep -Seconds 2
+    } finally { $ErrorActionPreference = $prev }
+  }
+  if (-not $okZip) { Die "$label download failed after retries - check network, then re-run" }
   if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
   New-Item -ItemType Directory -Force -Path (Split-Path $dir -Parent) | Out-Null
   Move-Item (Join-Path $ext $inner) $dir -Force
@@ -163,7 +213,11 @@ if (Test-Path $binding) {
   Info "downloading frida prebuilt binding (~50 MB, sha256 verified)"
   New-Item -ItemType Directory -Force -Path $TMP | Out-Null
   $tgz = Join-Path $TMP 'frida.tar.gz'
-  Invoke-WebRequest -Uri $FRIDA_URL -OutFile $tgz -UseBasicParsing
+  $okFrida = Get-File @(
+    $FRIDA_URL,
+    'https://github.com/frida/frida/releases/download/17.18.0/frida-v17.18.0-napi-v8-win32-x64.tar.gz'
+  ) $tgz 'frida'
+  if (-not $okFrida) { Die "frida download failed after retries - see docs/ENVIRONMENT.md 3.3 for manual steps" }
   $h = (Get-FileHash $tgz -Algorithm SHA256).Hash.ToLower()
   if ($h -ne $FRIDA_SHA) { Die "frida package sha256 mismatch: $h" }
   Ok "sha256 verified"
