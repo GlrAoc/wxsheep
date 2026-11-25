@@ -10,6 +10,15 @@
 A 线不碰任何网络协议、不伪造计分请求，只在客户端侧读状态 + 点击（与 2022 年那批
 `/easygame2021` 抓包项目完全不同——那条路 2022-09-21 已被腾讯加签废止）。
 
+## 仓库结构
+
+本仓库只含文档、视觉备选方案与工具脚本。**可运行的一键脚本在独立仓库**：
+
+- 核心脚本 → [GlrAoc/sheep-solver](https://github.com/GlrAoc/sheep-solver)
+- 调试代理 → [evi0s/WMPFDebugger](https://github.com/evi0s/WMPFDebugger)（第三方，GPL-2.0，需另装并打补丁）
+
+克隆到 `dbg/sheep-solver/` 与 `dbg/WMPFDebugger/` 后，目录结构即与本 README 描述一致。
+
 ## 快速开始（A 线，PC 微信）
 
 ```
