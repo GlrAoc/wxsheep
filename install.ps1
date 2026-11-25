@@ -54,6 +54,7 @@ if (Test-Path $localNode) {
   $zip = Join-Path $TMP 'node.zip'
   Invoke-WebRequest -Uri "https://npmmirror.com/mirrors/node/v$NODE_VER/node-v$NODE_VER-win-x64.zip" -OutFile $zip -UseBasicParsing
   Expand-Archive -Path $zip -DestinationPath (Join-Path $TMP 'node') -Force
+  New-Item -ItemType Directory -Force -Path (Split-Path $NODE_DIR -Parent) | Out-Null
   Move-Item (Join-Path $TMP "node\node-v$NODE_VER-win-x64") $NODE_DIR -Force
   Remove-Item $zip -Force
   $env:Path = "$NODE_DIR;$env:Path"
