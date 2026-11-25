@@ -4,10 +4,23 @@
 
 ---
 
+## 0. 首次使用（只做一次）
+
+```bat
+git clone https://github.com/GlrAoc/wxsheep
+cd wxsheep
+setup.cmd                        :: 拉取 sheep-solver 与 WMPFDebugger，并自动打补丁
+cd dbg\WMPFDebugger && yarn install
+```
+
+`setup.cmd` 幂等，重复执行只做检查不做破坏。frida 依赖的坑见 [ENVIRONMENT.md](ENVIRONMENT.md) 第 3.3 节。
+
+---
+
 ## 1. 正常流程（90% 的情况）
 
 ```
-1) 双击  E:\Ai project file\WXweb\dbg\sheep-solver\oneclick.cmd
+1) 双击  dbg\sheep-solver\oneclick.cmd
 2) 盯着黑窗口，等这一行出现：
      [proxy] hook ready after 25s, frida target pid=1632
 3) 这时才去微信里打开（或重开）「羊了个羊：星球」，进关卡
