@@ -1,0 +1,25 @@
+WMPFDebugger overlay
+====================
+
+This folder contains a modified copy of a file from the upstream project
+
+    WMPFDebugger - https://github.com/evi0s/WMPFDebugger - GPL-2.0
+
+File:
+    overlay/WMPFDebugger/src/logger.ts
+
+Origin:
+    src/logger.ts of the upstream project.
+
+Modification:
+    Adds support for the MINIAPP_PROXY_LOG environment variable so the proxy
+    process writes its own log file (pid / hook-ready / exit code). Needed by
+    the oneclick orchestrator to tell which process frida attached to and when
+    the hook became active. No other behaviour changed.
+
+Usage:
+    install.ps1 copies this file over dbg/WMPFDebugger/src/logger.ts after the
+    upstream source is downloaded, which avoids depending on `git apply`.
+
+License:
+    This modified copy remains under GPL-2.0, same as the upstream project.

@@ -21,12 +21,22 @@ A 线不碰任何网络协议、不伪造计分请求，只在客户端侧读状
 
 ## 快速开始（A 线，PC 微信）
 
-### 第 1 步 · 取代码（仅首次）
+### 方式 A · 下载即用（推荐，无需 node / git）
+
+1. 打开 [Releases](https://github.com/GlrAoc/wxsheep/releases)，下载 `wxsheep-installer.zip`
+2. 解压到任意目录（路径不要有中文更稳）
+3. 双击 **`install.cmd`** — 自动下载 node、两个依赖仓库、frida 预编译包（约 3–5 分钟，带 sha256 校验）
+4. 双击 **`start.cmd`** — 等窗口出现 `[proxy] hook ready`，再从微信打开小游戏进关卡
+
+安装器不需要 git，也不需要预装 node，全程只依赖 Windows 自带的 PowerShell 与 tar。
+
+### 方式 B · 从源码（需要 node ≥ 22 与 git）
 
 ```bat
 git clone https://github.com/GlrAoc/wxsheep
 cd wxsheep
 setup.cmd
+cd dbg\WMPFDebugger && yarn install
 ```
 
 `setup.cmd` 会把两个依赖拉到 `dbg\` 下——核心脚本 `sheep-solver` 与调试代理 `WMPFDebugger`——并自动给代理打上日志补丁。等价的手动命令：
@@ -36,16 +46,7 @@ git clone https://github.com/GlrAoc/sheep-solver   dbg\sheep-solver
 git clone https://github.com/evi0s/WMPFDebugger    dbg\WMPFDebugger
 ```
 
-### 第 2 步 · 装代理依赖（仅首次）
-
-```bat
-cd dbg\WMPFDebugger
-yarn install
-```
-
-frida 若拿不到预编译包会退化成源码编译并失败，处理办法见 [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) 第 3.3 节。
-
-### 第 3 步 · 通关
+### 然后 · 通关
 
 ```
 双击  dbg\sheep-solver\oneclick.cmd
