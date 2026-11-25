@@ -24,6 +24,7 @@ A 线不碰任何网络协议、不伪造计分请求，只在客户端侧读状
 ### 方式 A · 下载即用（推荐，无需 node / git）
 
 1. 打开 [Releases](https://github.com/GlrAoc/wxsheep/releases)，下载 `wxsheep-installer.zip`
+   - 国内下载慢或失败时，在链接前加镜像前缀：`https://gh-proxy.com/` + 原始地址
 2. 解压到任意目录（路径不要有中文更稳）
 3. 双击 **`install.cmd`** — 自动下载 node、两个依赖仓库、frida 预编译包（约 3–5 分钟，带 sha256 校验）
 4. 双击 **`start.cmd`** — 等窗口出现 `[proxy] hook ready`，再从微信打开小游戏进关卡
