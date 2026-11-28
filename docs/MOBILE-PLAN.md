@@ -1,5 +1,11 @@
 # MOBILE PLAN · 向手机端进发
 
+> **2026-11-26 更新**：本文的「视觉优先」假设已被推翻。实测确认微信 XWeb 内核
+> 存在官方调试开关（`debugxweb.qq.com/?inspector=true`），开启后可拿到与 PC 端
+> 同协议的 CDP，PC 的 `bot.js` / `apply_plan.js` 可近乎原样复用。
+> **请以 [MOBILE-SOLUTIONS.md](./MOBILE-SOLUTIONS.md) 为准**，本文保留作为
+> 早期可行性分析记录。
+
 > 结论先行：**不要一上来就做视觉识别**。先用一个几乎零成本的实验判断
 > "PC 和手机的牌面是不是同一张"，这个结论直接决定后面走哪条路。
 
